@@ -20,6 +20,8 @@ fast_nms = True
 cross_class_nms = False
 config = None
 
+net = None
+
 def merge_masks(masks):
     n_masks = np.concatenate([masks, masks, masks], -1)
     merged = np.zeros((n_masks.shape[1:]))
@@ -38,16 +40,6 @@ def infer_segmentation(model_name, img, top_k=15, score_threshold=0.15, crop=Tru
         img: cv2 image
     Returns: segmentation_array, disparity_image
     """
-    config_names_paths = {
-        "yolact_resnet50_54_800000.pth": "yolact_resnet50_config",
-        "yolact_plus_resnet50_54_800000.pth": "yolact_plus_resnet50_config"
-    }
-    if model_name not in config_names_paths:
-        raise Exception("Invalid Model Name")
-
-    set_cfg(config_names_paths[model_name])
-    os.makedirs('models', exist_ok=True)
-
     if torch.cuda.is_available():
         device = torch.device("cuda")
         cudnn.fastest = True
@@ -55,23 +47,35 @@ def infer_segmentation(model_name, img, top_k=15, score_threshold=0.15, crop=Tru
     else:
         device = torch.device("cpu")
         torch.set_default_tensor_type('torch.FloatTensor')
+    global net
+    if net is None:
+        config_names_paths = {
+            "yolact_resnet50_54_800000.pth": "yolact_resnet50_config",
+            "yolact_plus_resnet50_54_800000.pth": "yolact_plus_resnet50_config"
+        }
+        if model_name not in config_names_paths:
+            raise Exception("Invalid Model Name")
 
-    download_model_if_doesnt_exist(model_name)
-    model_path = os.path.join("models", model_name)
-    print("-> Loading model from ", model_path)
+        set_cfg(config_names_paths[model_name])
+        os.makedirs('models', exist_ok=True)
+
+        download_model_if_doesnt_exist(model_name)
+        model_path = os.path.join("models", model_name)
+        print("-> Loading model from ", model_path)
 
     with torch.no_grad():
-        # LOADING PRETRAINED MODEL
-        print("   Loading pretrained model")
-        net = Yolact()
-        net.load_weights(model_path, device)
-        net.eval()
+        if net is None:
+            # LOADING PRETRAINED MODEL
+            print("   Loading pretrained model")
+            net = Yolact()
+            net.load_weights(model_path, device)
+            net.eval()
 
-        net.to(device)
+            net.to(device)
 
-        net.detect.use_fast_nms = fast_nms
-        net.detect.use_cross_class_nms = cross_class_nms
-        cfg.mask_proto_debug = False
+            net.detect.use_fast_nms = fast_nms
+            net.detect.use_cross_class_nms = cross_class_nms
+            cfg.mask_proto_debug = False
 
         # Load image and preprocess
         frame = torch.from_numpy(img).to(device).float()
