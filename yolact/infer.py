@@ -1,6 +1,7 @@
 import matplotlib as mpl
 import matplotlib.cm as cm
 from torchvision import transforms, datasets
+import torch.backends.cudnn as cudnn
 
 from yolact import Yolact
 from yolact.layers.output_utils import postprocess
