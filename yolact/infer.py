@@ -49,8 +49,11 @@ def infer_segmentation(model_name, img, top_k=15, score_threshold=0.15, crop=Tru
 
     if torch.cuda.is_available():
         device = torch.device("cuda")
+        cudnn.fastest = True
+        torch.set_default_tensor_type('torch.cuda.FloatTensor')
     else:
         device = torch.device("cpu")
+        torch.set_default_tensor_type('torch.FloatTensor')
 
     download_model_if_doesnt_exist(model_name)
     model_path = os.path.join("models", model_name)
@@ -73,7 +76,7 @@ def infer_segmentation(model_name, img, top_k=15, score_threshold=0.15, crop=Tru
         frame = torch.from_numpy(img).to(device).float()
         h, w, _ = frame.shape
 
-        batch = FastBaseTransform(device)(frame.unsqueeze(0))
+        batch = FastBaseTransform(device).to(device)(frame.unsqueeze(0))
 
         # PREDICTION
         preds = net(batch)
