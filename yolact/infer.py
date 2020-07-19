@@ -114,5 +114,6 @@ def infer_segmentation(model_name, img, top_k=15, score_threshold=0.15, crop=Tru
                 break
 
         masks = masks[:num_dets_to_consider, :, :, None]
+        boxes = boxes[:num_dets_to_consider, :, None]
 
-    return masks.detach().cpu().numpy(), merge_masks(masks.detach().cpu().numpy())
+    return masks.detach().cpu().numpy(), merge_masks(masks.detach().cpu().numpy()), boxes
