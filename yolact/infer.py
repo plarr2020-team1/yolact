@@ -38,7 +38,7 @@ def infer_segmentation(model_name, img, top_k=15, score_threshold=0.15, crop=Tru
         model_name: One of:
             "yolact_resnet50_54_800000.pth",
         img: cv2 image
-    Returns: segmentation_array, disparity_image
+    Returns: segmentation_array, disparity_image, bounding boxes
     """
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -102,6 +102,8 @@ def infer_segmentation(model_name, img, top_k=15, score_threshold=0.15, crop=Tru
         
         # get only people
         person_idx = np.where(classes == 0)
+        if len(person_idx[0]) == 0:
+            return [], merge_masks([]), []
         classes = classes[person_idx]
         scores = scores[person_idx]
         boxes = boxes[person_idx]
