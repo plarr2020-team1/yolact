@@ -7,5 +7,5 @@ setup(
    name='yolact',
    version='1.0.0',
    packages=['yolact'],    
-   install_requires=required + ['dcnv2 @ git+https://github.com/CharlesShang/DCNv2@master#egg=dcnv2']
+   install_requires=required #+ ['dcnv2 @ git+https://github.com/CharlesShang/DCNv2@master#egg=dcnv2']
 )
